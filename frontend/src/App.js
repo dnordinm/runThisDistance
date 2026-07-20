@@ -10,7 +10,7 @@ function App() {
   const [routeCoords, setRouteCoords] = useState([[51.507478, -0.127965], [51.507533, -0.127872]])
   
   function getRoute() {  
-      fetch('http://127.0.0.1:5555/route?start_lat=51.5074&start_lon=-0.1278&end_lat=51.5155&end_lon=-0.1420')
+      fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${desiredDist}`)
       .then(r => r.json())
       .then(data => {
         const coords = data.routes[0].geometry.coordinates;
