@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Polyline, useMap, useMapEvents, Marker } from 'react-leaflet'
 
 function RecenterMap({coords}) {
   const map = useMap();
@@ -19,7 +19,9 @@ function App() {
   const [endLat, setEndLat] = useState('')
   const [endLon, setEndLon] = useState('')
   const [desiredDist, setDesiredDist] = useState('')
-  const [routeCoords, setRouteCoords] = useState([[51.507478, -0.127965], [51.507533, -0.127872]])
+  const [routeCoords, setRouteCoords] = useState([[51.507478, -0.127965]])
+  const [settingPoint, setSettingPoint] = useState('start')
+  
   
   function getRoute() {  
       fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${desiredDist}`)
@@ -29,6 +31,24 @@ function App() {
         const flipped = coords.map(pair => [pair[1], pair[0]]);
         setRouteCoords(flipped)
       })
+  }
+
+  function ClickHandler({ settingPoint, setStartLat, setStartLon, setEndLat, setEndLon, setSettingPoint }) {
+    useMapEvents({
+      click(e) {
+        const { lat, lng } = e.latlng
+        if(settingPoint === 'start') {
+          setStartLat(parseFloat(lat));
+          setStartLon(parseFloat(lng));
+          setSettingPoint('end')
+        } else {
+          setEndLat(parseFloat(lat));
+          setEndLon(parseFloat(lng));
+          setSettingPoint('start')
+        }
+      }
+    })
+    return null
   }
 
   return (
@@ -73,6 +93,13 @@ function App() {
         />
         <Polyline positions={routeCoords} />
         <RecenterMap coords={routeCoords} />
+        <ClickHandler settingPoint={settingPoint} setStartLat={setStartLat} setStartLon={setStartLon} setEndLat={setEndLat} setEndLon={setEndLon} setSettingPoint={setSettingPoint} />
+        {startLat && startLon && (
+          <Marker position={[startLat, startLon]} />
+        )}
+        {endLat && endLon && (
+          <Marker position={[endLat, endLon]} />
+        )}
       </MapContainer>
     </div>  
   )
