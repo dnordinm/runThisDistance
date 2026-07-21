@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
-import { MapContainer, TileLayer, Polyline } from 'react-leaflet'
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet'
+
+function RecenterMap({coords}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (coords.length > 0) {
+      map.fitBounds(coords);
+    }
+  }, [coords]);
+
+  return null
+}
 
 function App() {
   const [startLat, setStartLat] = useState('')
@@ -60,6 +72,7 @@ function App() {
         attribution="&copy; OpenStreetMap contributors"
         />
         <Polyline positions={routeCoords} />
+        <RecenterMap coords={routeCoords} />
       </MapContainer>
     </div>  
   )
@@ -73,15 +86,14 @@ function App() {
   //   [51.507533, -0.127872]
   // ];
   
-  // const [message, setMessage] = useState('loading')
-
-  // useEffect(() => {
-  //   fetch('http://127.0.0.1:5555/')
-  //   .then(r => r.text())
-  //   .then(data => setMessage(data))
-  // },[]);
-
-  // return <div>{message}</div>
+  
 }
+
+// test coords:
+//   Start latitude: 51.5074
+//   Start longitude: -0.1278
+//   End latitude: 51.5155
+//   End longitude: -0.1420
+//   Target distance: 4
 
 export default App
