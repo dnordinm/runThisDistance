@@ -21,6 +21,8 @@ function App() {
   const [desiredDist, setDesiredDist] = useState('')
   const [routeCoords, setRouteCoords] = useState([[51.507478, -0.127965]])
   const [settingPoint, setSettingPoint] = useState('start')
+  const [startAddress, setStartAddress] = useState('')
+  const [endAddress, setEndAddress] = useState('')
   
   
   function getRoute() {  
@@ -51,6 +53,24 @@ function App() {
     return null
   }
 
+  function geocodeStart() {
+    fetch(`http://127.0.0.1:5555/geocode?address=${startAddress}`)
+    .then(r => r.json())
+    .then(data => {
+      setStartLat(data.lat)
+      setStartLon(data.lon)
+    });
+  };
+
+  function geocodeEnd() {
+    fetch(`http://127.0.0.1:5555/geocode?address=${startAddress}`)
+    .then(r => r.json())
+    .then(data => {
+      setEndLat(data.lat)
+      setEndLon(data.lon)
+    });
+  };
+
   return (
     <div>
       <input
@@ -65,6 +85,20 @@ function App() {
         onChange={e => setStartLon(e.target.value)}
         placeholder="Starting Longitude"
       />
+      <input
+        type="text"
+        value={startAddress}
+        onChange={e => setStartAddress(e.target.value)}
+        placeholder="Set starting address"
+      />
+      <button onClick={geocodeStart}>Get Start Address</button>
+      <input
+        type="text"
+        value={endAddress}
+        onChange={e => setEndAddress(e.target.value)}
+        placeholder="Set ending address"
+      />
+      <button onClick={geocodeEnd}>Get End Address</button>
       <input
         type="text"
         value={endLat}
