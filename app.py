@@ -47,7 +47,20 @@ def get_route():
     
     return data
 
+@app.route('/geocode')
+def geocode():
+    address = request.args.get("address")
 
+    url = f"https://nominatim.openstreetmap.org/search?q={address}&format=json"
+    headers = {"User-Agent": "https://github.com/dnordinm/runThisDistance"}
+
+    response = requests.get(url, headers=headers)
+    data = response.json()
+
+    lat = float(data[0]["lat"])
+    lon = float(data[0]["lon"])
+
+    return {"lat": lat, "lon":lon}
 
 if __name__ == "__main__":
     app.run(debug=True, port=5555)
