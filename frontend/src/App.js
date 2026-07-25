@@ -1,6 +1,24 @@
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Polyline, useMap, useMapEvents, Marker } from 'react-leaflet'
 
+function ClickHandler({ settingPoint, setStartLat, setStartLon, setEndLat, setEndLon, setSettingPoint }) {
+  useMapEvents({
+    click(e) {
+      const { lat, lng } = e.latlng
+      if(settingPoint === 'start') {
+        setStartLat(parseFloat(lat));
+        setStartLon(parseFloat(lng));
+        setSettingPoint('end')
+      } else {
+        setEndLat(parseFloat(lat));
+        setEndLon(parseFloat(lng));
+        setSettingPoint('start')
+      }
+    }
+  })
+  return null
+}
+
 function RecenterMap({coords}) {
   const map = useMap();
 
@@ -13,6 +31,7 @@ function RecenterMap({coords}) {
   return null
 }
 
+
 function App() {
   const [startLat, setStartLat] = useState('')
   const [startLon, setStartLon] = useState('')
@@ -23,56 +42,68 @@ function App() {
   const [settingPoint, setSettingPoint] = useState('start')
   const [startAddress, setStartAddress] = useState('')
   const [endAddress, setEndAddress] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   
   
-  function getRoute() {  
-      fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${desiredDist}`)
-      .then(r => r.json())
-      .then(data => {
+  async function getRoute() {  
+      setErrorMessage('')
+      try {
+        const r = await fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${desiredDist}`);
+        if(!r.ok) {
+          throw new Error("Route request failed.");
+        }
+        const data = await r.json();
         const coords = data.routes[0].geometry.coordinates;
         const flipped = coords.map(pair => [pair[1], pair[0]]);
-        setRouteCoords(flipped)
-      })
-  }
-
-  function ClickHandler({ settingPoint, setStartLat, setStartLon, setEndLat, setEndLon, setSettingPoint }) {
-    useMapEvents({
-      click(e) {
-        const { lat, lng } = e.latlng
-        if(settingPoint === 'start') {
-          setStartLat(parseFloat(lat));
-          setStartLon(parseFloat(lng));
-          setSettingPoint('end')
-        } else {
-          setEndLat(parseFloat(lat));
-          setEndLon(parseFloat(lng));
-          setSettingPoint('start')
-        }
+        setRouteCoords(flipped);
+      } catch (error) {
+        console.log(error)
+        setErrorMessage(error.message)
       }
-    })
-    return null
   }
 
-  function geocodeStart() {
-    fetch(`http://127.0.0.1:5555/geocode?address=${startAddress}`)
-    .then(r => r.json())
-    .then(data => {
-      setStartLat(data.lat)
-      setStartLon(data.lon)
-    });
+
+  async function geocodeStart() {
+    setErrorMessage('')
+    try {
+      const r = await fetch(`http://127.0.0.1:5555/geocode?address=${startAddress}`);
+      if(!r.ok) {
+        if(r.status === 429) {
+          throw new Error('Too many requests - please wait a minute and try again.');
+        }
+        throw new Error('Address not found');
+      };
+      const data = await r.json();
+      setStartLat(data.lat);
+      setStartLon(data.lon);
+    } catch(error) {
+      console.log(error)
+      setErrorMessage(error.message)
+    };
   };
 
-  function geocodeEnd() {
-    fetch(`http://127.0.0.1:5555/geocode?address=${startAddress}`)
-    .then(r => r.json())
-    .then(data => {
-      setEndLat(data.lat)
-      setEndLon(data.lon)
-    });
+  async function geocodeEnd() {
+    setErrorMessage('')
+    try {
+      const r = await fetch(`http://127.0.0.1:5555/geocode?address=${endAddress}`)
+      if(!r.ok) {
+        if(r.status === 429) {
+          throw new Error('Too many requests - please wait a minute and try again.')
+        }
+        throw new Error('Address not found.')
+      }
+      const data = await r.json();
+      setEndLat(data.lat);
+      setEndLon(data.lon);
+    } catch(error) {
+      console.log(error)
+      setErrorMessage(error.message)
+    };
   };
 
   return (
     <div>
+      {errorMessage && <p>{errorMessage}</p>}
       <input
         type="text"
         value={startLat}
