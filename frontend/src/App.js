@@ -1,3 +1,4 @@
+import "./App.css"
 import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Polyline, useMap, useMapEvents, Marker } from 'react-leaflet'
 
@@ -38,7 +39,7 @@ function App() {
   const [endLat, setEndLat] = useState('')
   const [endLon, setEndLon] = useState('')
   const [desiredDist, setDesiredDist] = useState('')
-  const [routeCoords, setRouteCoords] = useState([[51.507478, -0.127965]])
+  const [routeCoords, setRouteCoords] = useState([[40.7608, -111.8910]])
   const [settingPoint, setSettingPoint] = useState('start')
   const [startAddress, setStartAddress] = useState('')
   const [endAddress, setEndAddress] = useState('')
@@ -102,90 +103,86 @@ function App() {
   };
 
   return (
-    <div>
-      {errorMessage && <p>{errorMessage}</p>}
-      <input
-        type="text"
-        value={startLat}
-        onChange={e => setStartLat(e.target.value)}
-        placeholder="Starting Latitude"
-      />
-      <input
-        type="text"
-        value={startLon}
-        onChange={e => setStartLon(e.target.value)}
-        placeholder="Starting Longitude"
-      />
-      <input
-        type="text"
-        value={startAddress}
-        onChange={e => setStartAddress(e.target.value)}
-        placeholder="Set starting address"
-      />
-      <button onClick={geocodeStart}>Get Start Address</button>
-      <input
-        type="text"
-        value={endAddress}
-        onChange={e => setEndAddress(e.target.value)}
-        placeholder="Set ending address"
-      />
-      <button onClick={geocodeEnd}>Get End Address</button>
-      <input
-        type="text"
-        value={endLat}
-        onChange={e => setEndLat(e.target.value)}
-        placeholder="Ending Latitude"
-      />
-      <input
-        type="text"
-        value={endLon}
-        onChange={e => setEndLon(e.target.value)}
-        placeholder="Ending Longitude"
-      />
-      <input
-        type="text"
-        value={desiredDist}
-        onChange={e => setDesiredDist(e.target.value)}
-        placeholder="Set desired distance"
-      />
+    <div className="app-container">
+      <div className="sidebar">
+        {errorMessage && <p>{errorMessage}</p>}
+        <div className="input-group">
+          <h3>Start</h3>
+          <input
+            type="text"
+            value={startLat}
+            onChange={e => setStartLat(e.target.value)}
+            placeholder="Starting Latitude"
+          />
+          <input
+            type="text"
+            value={startLon}
+            onChange={e => setStartLon(e.target.value)}
+            placeholder="Starting Longitude"
+          />
+          <input
+            type="text"
+            value={startAddress}
+            onChange={e => setStartAddress(e.target.value)}
+            placeholder="Set starting address"
+          />
+          <button onClick={geocodeStart}>Get Start Address</button>
+        </div>
 
-      <button onClick={getRoute}>Get Route</button>
+      <div className="input-group">
+        <h3>End</h3>
+        <input
+          type="text"
+          value={endLat}
+          onChange={e => setEndLat(e.target.value)}
+          placeholder="Ending Latitude"
+          />
+        <input
+          type="text"
+          value={endLon}
+          onChange={e => setEndLon(e.target.value)}
+          placeholder="Ending Longitude"
+          />
+        <input
+          type="text"
+          value={endAddress}
+          onChange={e => setEndAddress(e.target.value)}
+          placeholder="Set ending address"
+          />
+        <button onClick={geocodeEnd}>Get End Address</button>
+      </div>
+        
+      <div className="input-group">
+        <h3>Distance</h3>
+        <input
+          type="text"
+          value={desiredDist}
+          onChange={e => setDesiredDist(e.target.value)}
+          placeholder="Set desired distance"
+          />
+        <button onClick={getRoute}>Get Route</button>
+        </div>
+      </div>
 
-      <MapContainer center={[51.507478, -0.127965]} zoom={17} style={{ height: '500px', width: '100%' }}>
-        <TileLayer 
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution="&copy; OpenStreetMap contributors"
-        />
-        <Polyline positions={routeCoords} />
-        <RecenterMap coords={routeCoords} />
-        <ClickHandler settingPoint={settingPoint} setStartLat={setStartLat} setStartLon={setStartLon} setEndLat={setEndLat} setEndLon={setEndLon} setSettingPoint={setSettingPoint} />
-        {startLat && startLon && (
-          <Marker position={[startLat, startLon]} />
-        )}
-        {endLat && endLon && (
-          <Marker position={[endLat, endLon]} />
-        )}
-      </MapContainer>
+      <div className="map-area">
+        <MapContainer center={[40.7608, -111.8910]} zoom={17} style={{ height: '100%', width: '100%' }}>
+          <TileLayer 
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+          />
+          <Polyline positions={routeCoords} />
+          <RecenterMap coords={routeCoords} />
+          <ClickHandler settingPoint={settingPoint} setStartLat={setStartLat} setStartLon={setStartLon} setEndLat={setEndLat} setEndLon={setEndLon} setSettingPoint={setSettingPoint} />
+          {startLat && startLon && (
+            <Marker position={[startLat, startLon]} />
+          )}
+          {endLat && endLon && (
+            <Marker position={[endLat, endLon]} />
+          )}
+          </MapContainer>
+        </div>
     </div>  
-  )
-  
-  
-  // const routeCoords = [
-  //   [51.507478, -0.127965],
-  //   [51.507487, -0.127954],
-  //   [51.507502, -0.127933],
-  //   [51.507517, -0.127909],
-  //   [51.507533, -0.127872]
-  // ];
-  
-  
+  )  
 }
-
-// test coords:
-//   Start latitude: 51.5074
-//   Start longitude: -0.1278
-//   End latitude: 51.5155
-//   End longitude: -0.1420
-//   Target distance: 4
 
 export default App
