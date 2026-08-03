@@ -44,12 +44,15 @@ function App() {
   const [startAddress, setStartAddress] = useState('')
   const [endAddress, setEndAddress] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [unit, setUnit] = useState('km')
+  const [actualDistance, setActualDistance] = useState(null); 
   
   
   async function getRoute() {  
       setErrorMessage('')
+      const distanceInKm = unit === 'mi' ? parseFloat(desiredDist) * 1.609344 : parseFloat(desiredDist)
       try {
-        const r = await fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${desiredDist}`);
+        const r = await fetch(`http://127.0.0.1:5555/route?start_lat=${startLat}&start_lon=${startLon}&end_lat=${endLat}&end_lon=${endLon}&target_distance=${distanceInKm}`);
         if(!r.ok) {
           throw new Error("Route request failed.");
         }
@@ -57,6 +60,7 @@ function App() {
         const coords = data.routes[0].geometry.coordinates;
         const flipped = coords.map(pair => [pair[1], pair[0]]);
         setRouteCoords(flipped);
+        setActualDistance(data.routes[0].distance / 1000)
       } catch (error) {
         console.log(error)
         setErrorMessage(error.message)
@@ -107,6 +111,10 @@ function App() {
       <div className="sidebar">
         {errorMessage && <p>{errorMessage}</p>}
         <div className="input-group">
+          <select value={unit} onChange={e => setUnit(e.target.value)}>
+            <option value='km'>Kilometers</option>
+            <option value='mi'>Miles</option>
+          </select>
           <h3>Start</h3>
           <input
             type="text"
@@ -162,6 +170,11 @@ function App() {
           />
         <button onClick={getRoute}>Get Route</button>
         </div>
+          {actualDistance && (
+            <p>
+              Distance: {unit === 'mi' ? (actualDistance / 1.609344).toFixed(2) : actualDistance.toFixed(2)} {unit}
+            </p>
+          )}
       </div>
 
       <div className="map-area">
