@@ -50,14 +50,14 @@ def get_route():
     perp = perpendicular(b)
 
 
-    max_attempts = 5
-    tolerance = 0.1
+    max_attempts = 8
+    tolerance = 0.03
     data = None
 
     for attempt in range(max_attempts):
         print("looop start", attempt)
         waypoint_lat, waypoint_lon = new_waypoint(mid_lat, mid_lon, h, perp)
-        url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{waypoint_lon},{waypoint_lat};{end_lon},{end_lat}?overview=full&geometries=geojson"
+        url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{waypoint_lon},{waypoint_lat};{end_lon},{end_lat}?overview=full&geometries=geojson&steps=true"
         response = requests.get(url)
         data = response.json()
 

@@ -46,6 +46,7 @@ function App() {
   const [errorMessage, setErrorMessage] = useState('')
   const [unit, setUnit] = useState('km')
   const [actualDistance, setActualDistance] = useState(null); 
+  const [directions, setDirections] = useState([]);
   
   
   async function getRoute() {  
@@ -61,6 +62,7 @@ function App() {
         const flipped = coords.map(pair => [pair[1], pair[0]]);
         setRouteCoords(flipped);
         setActualDistance(data.routes[0].distance / 1000)
+        setDirections(buildDirections(data));
       } catch (error) {
         console.log(error)
         setErrorMessage(error.message)
@@ -106,6 +108,19 @@ function App() {
     };
   };
 
+  function buildDirections(data) {
+    const leg1Steps = data.routes[0].legs[0].steps;
+    const leg2Steps = data.routes[0].legs[1].steps;
+    const trimmedLeg1 = leg1Steps.slice(0, -1)
+    const trimmedLeg2 = leg2Steps.slice(1)
+    const allSteps = [...trimmedLeg1, ...trimmedLeg2];
+
+    return allSteps.map(step => {
+      const sentence = `${step.maneuver.type} ${step.maneuver.modifier || ''} onto ${step.name || 'unamed road'}`
+      return sentence.charAt(0).toUpperCase() + sentence.slice(1)
+    })
+  }
+
   return (
     <div className="app-container">
       <div className="sidebar">
@@ -137,44 +152,55 @@ function App() {
           <button onClick={geocodeStart}>Get Start Address</button>
         </div>
 
-      <div className="input-group">
-        <h3>End</h3>
-        <input
-          type="text"
-          value={endLat}
-          onChange={e => setEndLat(e.target.value)}
-          placeholder="Ending Latitude"
-          />
-        <input
-          type="text"
-          value={endLon}
-          onChange={e => setEndLon(e.target.value)}
-          placeholder="Ending Longitude"
-          />
-        <input
-          type="text"
-          value={endAddress}
-          onChange={e => setEndAddress(e.target.value)}
-          placeholder="Set ending address"
-          />
-        <button onClick={geocodeEnd}>Get End Address</button>
-      </div>
-        
-      <div className="input-group">
-        <h3>Distance</h3>
-        <input
-          type="text"
-          value={desiredDist}
-          onChange={e => setDesiredDist(e.target.value)}
-          placeholder="Set desired distance"
-          />
-        <button onClick={getRoute}>Get Route</button>
+        <div className="input-group">
+          <h3>End</h3>
+          <input
+            type="text"
+            value={endLat}
+            onChange={e => setEndLat(e.target.value)}
+            placeholder="Ending Latitude"
+            />
+          <input
+            type="text"
+            value={endLon}
+            onChange={e => setEndLon(e.target.value)}
+            placeholder="Ending Longitude"
+            />
+          <input
+            type="text"
+            value={endAddress}
+            onChange={e => setEndAddress(e.target.value)}
+            placeholder="Set ending address"
+            />
+          <button onClick={geocodeEnd}>Get End Address</button>
         </div>
-          {actualDistance && (
-            <p>
-              Distance: {unit === 'mi' ? (actualDistance / 1.609344).toFixed(2) : actualDistance.toFixed(2)} {unit}
-            </p>
-          )}
+        
+        <div className="input-group">
+          <h3>Distance</h3>
+          <input
+            type="text"
+            value={desiredDist}
+            onChange={e => setDesiredDist(e.target.value)}
+            placeholder="Set desired distance"
+            />
+          <button onClick={getRoute}>Get Route</button>
+          </div>
+            {actualDistance && (
+              <p>
+                Total Distance: {unit === 'mi' ? (actualDistance / 1.609344).toFixed(2) : actualDistance.toFixed(2)} {unit}
+              </p>
+            )}
+        
+      {directions.length > 0 && (
+        <div className="directions">
+          <h3>Directions</h3>
+          <ol>
+            {directions.map((step, index) => (
+              <li key={index}>{step}</li>
+            ))}
+          </ol>
+        </div>
+      )}
       </div>
 
       <div className="map-area">
