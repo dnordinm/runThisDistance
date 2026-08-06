@@ -4,6 +4,8 @@ A route planner that generates a walking/running/biking route between two points
 
 Enter a start point, end point, and desired distance (by typing coordinates, searching an address, or clicking directly on the map), and the app computes a route that lands close to that target, rendered live on an interactive map.
 
+![Gif showing the app in use](./assets/Screen%20Recording%202026-08-05%20at%2020.39.11.gif)
+
 ## Why this is harder than it sounds
 
 Routing APIs (this project uses [OSRM](http://project-osrm.org/), built on OpenStreetMap data) return the shortest path between two points. Hitting a target distance meant building that logic from scratch:
@@ -54,7 +56,7 @@ App runs on `http://localhost:3000`.
 backend/
   app.py          # Flask routes, request handling, validation
   equations.py    # Haversine, midpoint, bearing, and waypoint-projection math
-  test.py        # scratch script used to verify the geometry functions during development
+  test.py         # scratch script used to verify the geometry functions during development
   Pipfile         # dependencies
   Pipfile.lock    # locked dependency versions
 frontend/
@@ -64,7 +66,6 @@ frontend/
 
 ## Possible future improvements
 
-- Add miles conversion (currently only does kilometers)
 - Persist favorite/past routes (would introduce a database)
 - Multiple route alternatives to choose from, rather than one final result
 - Geolocation-based initial map centering
