@@ -1,22 +1,22 @@
 # runThisDistance
 
-A route planner that generates a walking/running/biking route between two points matching a target distance you choose — something no public routing API supports natively.
+A route planner that generates a walking/running/biking route between two points matching a target distance you choose.
 
 Enter a start point, end point, and desired distance (by typing coordinates, searching an address, or clicking directly on the map), and the app computes a route that lands close to that target, rendered live on an interactive map.
 
 ![Gif showing the app in use](./assets/Screen%20Recording%202026-08-05%20at%2020.39.11.gif)
 
-## Why this is harder than it sounds
+## The Issue
 
-Routing APIs (this project uses [OSRM](http://project-osrm.org/), built on OpenStreetMap data) return the shortest path between two points. Hitting a target distance meant building that logic from scratch:
+Routing APIs, such as OSRM, return the shortest path between two points. Hitting a target distance meant building that logic from scratch:
 
-1. **Geometry** - using the insight that all points where `distance(start→P) + distance(P→end)` equals a constant form an ellipse (with start/end as foci), the app calculates how far off the direct path a waypoint needs to sit to add the desired extra distance.
+1. **Geometry** - using the insight that all points where `distance(start to waypoint) + distance(waypoint to end)` equals a constant form an ellipse (with start/end as foci), the app calculates how far off the direct path a waypoint needs to sit to add the desired extra distance.
 2. **Spherical trigonometry** - since lat/lon coordinates sit on a sphere, not a flat plane, the app implements the Haversine formula (great-circle distance), initial bearing, and the destination-point formula by hand, in Python.
-3. **Convergence loop** - straight-line geometry can only approximate what real, winding roads will actually produce. The backend requests a route through the calculated waypoint, checks the actual returned distance against the target, and iteratively scales the waypoint offset closer with each pass (up to 5 attempts) until the result lands within 10% of the target.
+3. **Convergence loop** - straight-line geometry can only approximate what real, winding roads will actually produce. The backend requests a route through the calculated waypoint, checks the actual returned distance against the target, and scales the waypoint offset closer with each pass (up to 5 attempts) until the result lands within 10% of the target.
 
 ## Features
 
-- Click-to-set start/end points directly on the map
+- Click on map to set start/end points
 - Address search (geocoding via [Nominatim](https://nominatim.org/)) as an alternative to manual coordinates
 - Live map rendering with auto-recentering to fit the generated route
 - Input validation and clear error messaging (impossible targets, unreachable points, rate limits, etc.)
@@ -26,8 +26,8 @@ Routing APIs (this project uses [OSRM](http://project-osrm.org/), built on OpenS
 
 **Frontend:** React, react-leaflet (map rendering)
 **Backend:** Python, Flask, Flask-CORS, Flask-Limiter
-**External APIs:** OSRM (routing), Nominatim (geocoding)
-**Core algorithms:** Haversine distance, bearing/azimuth calculation, destination-point projection. All implemented from the underlying spherical trigonometry rather than a geo library, in `backend/equations.py`
+**External APIs:** [OSRM](https://project-osrm.org/) (routing), [Nominatim](https://nominatim.org/) (geocoding)
+**Core algorithms:** Haversine distance, bearing/azimuth calculation, destination-point projection. All implemented from the underlying spherical trigonometry from [movable-type](https://www.movable-type.co.uk/scripts/latlong.html), in `backend/equations.py`
 
 ## Running it locally
 
