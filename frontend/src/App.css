@@ -5,10 +5,10 @@
 
 .sidebar {
   width: 320px;
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
   overflow-y: auto;
 }
 
@@ -21,6 +21,29 @@
 .map-area {
   flex: 1;
   height: 100%;
+}
+
+.route-options {
+  display: flex;
+  gap: 1px;
+}
+
+.route-card {
+  flex: 1;
+  padding: 1px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.route-card:hover {
+  border-color: #999;
+}
+
+.route-card.route-card.selected {
+  border-color:aqua;
+  background: #f0f7ff;
 }
 
 .error {

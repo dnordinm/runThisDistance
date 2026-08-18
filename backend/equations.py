@@ -47,6 +47,13 @@ def perpendicular(bearing):
     
     return perpendicular
 
+def perpendicular_opposite(bearing):
+    perp = bearing - 90
+    if perp < 0:
+        perp += 360
+    
+    return perp
+
 def new_waypoint(lat_start, lon_start, desired_dist, bearing):
     lat_start_radians = math.radians(lat_start)
     lon_start_radians = math.radians(lon_start)

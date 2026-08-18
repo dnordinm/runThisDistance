@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_cors import CORS
-from equations import haversine, midpoint, bearing, perpendicular, new_waypoint
+from equations import haversine, midpoint, bearing, perpendicular, perpendicular_opposite, new_waypoint
 import requests
 import math
 
@@ -14,6 +14,31 @@ limiter = Limiter(
     app=app,
     default_limits = ['50 per hour']
 )
+
+def find_route(start_lat, start_lon, end_lat, end_lon, mid_lat, mid_lon, h, perp, target_distance):
+    max_attempts = 8
+    tolerance = 0.03
+    data = None
+
+    for attempt in range(max_attempts):
+        print("looop start", attempt)
+        waypoint_lat, waypoint_lon = new_waypoint(mid_lat, mid_lon, h, perp)
+        url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{waypoint_lon},{waypoint_lat};{end_lon},{end_lat}?overview=full&geometries=geojson&steps=true"
+        response = requests.get(url)
+        data = response.json()
+
+        if data['code'] != 'Ok':
+            return None
+
+        actual_distance = data["routes"][0]["distance"] / 1000
+        print(actual_distance, attempt)
+        if abs(actual_distance - target_distance) / target_distance <= tolerance:
+            break
+
+        ratio = target_distance / actual_distance
+        h = ratio * h
+    
+    return data
 
 @app.route("/")
 def home():
@@ -47,32 +72,20 @@ def get_route():
     h = math.sqrt((target_distance/2)**2 - (T/2)**2)
     mid_lat, mid_lon = midpoint(start_lat, start_lon, end_lat, end_lon)
     b = bearing(start_lat, start_lon, end_lat, end_lon)
-    perp = perpendicular(b)
-
-
-    max_attempts = 8
-    tolerance = 0.03
-    data = None
-
-    for attempt in range(max_attempts):
-        print("looop start", attempt)
-        waypoint_lat, waypoint_lon = new_waypoint(mid_lat, mid_lon, h, perp)
-        url = f"http://router.project-osrm.org/route/v1/driving/{start_lon},{start_lat};{waypoint_lon},{waypoint_lat};{end_lon},{end_lat}?overview=full&geometries=geojson&steps=true"
-        response = requests.get(url)
-        data = response.json()
-
-        if data['code'] != 'Ok':
-            return {'error': 'No route found between two points.'}, 400
-
-        actual_distance = data["routes"][0]["distance"] / 1000
-        print(actual_distance, attempt)
-        if abs(actual_distance - target_distance) / target_distance <= tolerance:
-            break
-
-        ratio = target_distance / actual_distance
-        h = ratio * h
     
-    return data
+    perp_right = perpendicular(b)
+    perp_left = perpendicular_opposite(b)
+
+    route_right = find_route(start_lat, start_lon, end_lat, end_lon, mid_lat, mid_lon, h, perp_right, target_distance)
+    route_left = find_route(start_lat, start_lon, end_lat, end_lon, mid_lat, mid_lon, h, perp_left, target_distance)
+
+    if route_right is None and route_left is None:
+        return {'error': 'Could not find a route between these points'}, 400
+    
+    return {
+        'route_right': route_right,
+        'route_left': route_left
+    }
 
 @app.route('/geocode')
 @limiter.limit("1 per second; 30 per minute")

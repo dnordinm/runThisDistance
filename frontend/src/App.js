@@ -39,14 +39,13 @@ function App() {
   const [endLat, setEndLat] = useState('')
   const [endLon, setEndLon] = useState('')
   const [desiredDist, setDesiredDist] = useState('')
-  const [routeCoords, setRouteCoords] = useState([[40.7608, -111.8910]])
   const [settingPoint, setSettingPoint] = useState('start')
   const [startAddress, setStartAddress] = useState('')
   const [endAddress, setEndAddress] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [unit, setUnit] = useState('km')
-  const [actualDistance, setActualDistance] = useState(null); 
-  const [directions, setDirections] = useState([]);
+  const [routeData, setRouteData] = useState({left: null, right: null})
+  const [selectedRoute, setSelectedRoute] = useState(null)
   
   
   async function getRoute() {  
@@ -58,11 +57,8 @@ function App() {
           throw new Error("Route request failed.");
         }
         const data = await r.json();
-        const coords = data.routes[0].geometry.coordinates;
-        const flipped = coords.map(pair => [pair[1], pair[0]]);
-        setRouteCoords(flipped);
-        setActualDistance(data.routes[0].distance / 1000)
-        setDirections(buildDirections(data));
+        setRouteData({left: data.route_left, right: data.route_right})
+        setSelectedRoute(null)
       } catch (error) {
         console.log(error)
         setErrorMessage(error.message)
@@ -120,6 +116,14 @@ function App() {
       return sentence.charAt(0).toUpperCase() + sentence.slice(1)
     })
   }
+
+  const leftCoords = routeData.left ? routeData.left.routes[0].geometry.coordinates.map(pair => [pair[1], pair[0]]) : [];
+  const rightCoords = routeData.right ? routeData.right.routes[0].geometry.coordinates.map(pair => [pair[1], pair[0]]) : [];
+  const leftDistance = routeData.left ? routeData.left.routes[0].distance / 1000 : null;
+  const rightDistance = routeData.right ? routeData.right.routes[0].distance / 1000 : null;
+  const selectedData = selectedRoute ? routeData[selectedRoute] : null;
+  const actualDistance = selectedData ? selectedData.routes[0].distance / 1000 : null
+  const directions = selectedData ? buildDirections(selectedData) : []
 
   return (
     <div className="app-container">
@@ -185,12 +189,31 @@ function App() {
             />
           <button onClick={getRoute}>Get Route</button>
           </div>
-            {actualDistance && (
+            {/* {actualDistance && (
               <p>
                 Total Distance: {unit === 'mi' ? (actualDistance / 1.609344).toFixed(2) : actualDistance.toFixed(2)} {unit}
               </p>
-            )}
-        
+            )} */}
+
+      {( leftDistance || rightDistance ) && (
+        <div className="route-options">
+          <div
+            className={`route-card ${selectedRoute === 'left' ? 'selected' : ''}`}
+            onClick={() => setSelectedRoute('left')}
+          >
+            <strong>Route 1</strong>
+            <p>{unit === 'mi' ? (leftDistance / 1.609344).toFixed(2) : leftDistance.toFixed(2)} {unit}</p>
+          </div>
+          <div
+            className={`route-card ${selectedRoute === 'right' ? 'selected' : ''}`}
+            onClick={() => setSelectedRoute('right')}
+          >
+            <strong>Route 2</strong>
+            <p>{unit === 'mi' ? (rightDistance / 1.609344).toFixed(2) : rightDistance.toFixed(2)} {unit}</p>
+          </div>
+        </div>
+      )}
+
       {directions.length > 0 && (
         <div className="directions">
           <h3>Directions</h3>
@@ -209,8 +232,15 @@ function App() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
           />
-          <Polyline positions={routeCoords} />
-          <RecenterMap coords={routeCoords} />
+          <Polyline positions={leftCoords} color="blue" bubblingMouseEvents={false} eventHandlers={{
+            click: (e) => {
+              setSelectedRoute('left')
+          }}}/>
+          <Polyline positions={rightCoords} color="green" bubblingMouseEvents={false} eventHandlers={{
+            click: (e) => {
+              setSelectedRoute('right')
+          }}}/>
+          <RecenterMap coords={[...leftCoords, ...rightCoords]} />
           <ClickHandler settingPoint={settingPoint} setStartLat={setStartLat} setStartLon={setStartLon} setEndLat={setEndLat} setEndLon={setEndLon} setSettingPoint={setSettingPoint} />
           {startLat && startLon && (
             <Marker position={[startLat, startLon]} />
