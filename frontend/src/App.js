@@ -46,6 +46,14 @@ function App() {
   const [unit, setUnit] = useState('km')
   const [routeData, setRouteData] = useState({left: null, right: null})
   const [selectedRoute, setSelectedRoute] = useState(null)
+  const [theme, setTheme] = useState('dark')
+  const tileURL = theme === 'dark' 
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'; 
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', theme);
+  }, [theme]);
   
   
   async function getRoute() {  
@@ -129,6 +137,9 @@ function App() {
     <div className="app-container">
       <div className="sidebar">
         {errorMessage && <p>{errorMessage}</p>}
+        <button className="theme-toggle" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+          {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </button>
         <div className="input-group">
           <select value={unit} onChange={e => setUnit(e.target.value)}>
             <option value='km'>Kilometers</option>
@@ -201,14 +212,14 @@ function App() {
             className={`route-card ${selectedRoute === 'left' ? 'selected' : ''}`}
             onClick={() => setSelectedRoute('left')}
           >
-            <strong>Route 1</strong>
+            <p><strong>Route 1</strong></p>
             <p>{unit === 'mi' ? (leftDistance / 1.609344).toFixed(2) : leftDistance.toFixed(2)} {unit}</p>
           </div>
           <div
             className={`route-card ${selectedRoute === 'right' ? 'selected' : ''}`}
             onClick={() => setSelectedRoute('right')}
           >
-            <strong>Route 2</strong>
+            <p><strong>Route 2</strong></p>
             <p>{unit === 'mi' ? (rightDistance / 1.609344).toFixed(2) : rightDistance.toFixed(2)} {unit}</p>
           </div>
         </div>
@@ -229,17 +240,33 @@ function App() {
       <div className="map-area">
         <MapContainer center={[40.7608, -111.8910]} zoom={17} style={{ height: '100%', width: '100%' }}>
           <TileLayer 
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          url={tileURL}
           attribution="&copy; OpenStreetMap contributors"
           />
-          <Polyline positions={leftCoords} color="blue" bubblingMouseEvents={false} eventHandlers={{
-            click: (e) => {
-              setSelectedRoute('left')
-          }}}/>
-          <Polyline positions={rightCoords} color="green" bubblingMouseEvents={false} eventHandlers={{
-            click: (e) => {
-              setSelectedRoute('right')
-          }}}/>
+          <Polyline
+            key={`left - ${selectedRoute}`} 
+            positions={leftCoords} 
+            color={theme === 'dark' ? '#FF3B4E' : '#E0293C'}
+            weight={selectedRoute === 'left' ? 7 : 3}
+            opacity={selectedRoute === 'left' ? 1 : 0.5}
+            bubblingMouseEvents={false} 
+            eventHandlers={{
+              click: (e) => {
+                setSelectedRoute('left')
+            }}}
+          />
+          <Polyline 
+            key={`right - ${selectedRoute}`}
+            positions={rightCoords} 
+            color={theme === 'dark' ? '#37E0C4' : '#0EA89A'}
+            weight={selectedRoute === 'right' ? 7 : 3}
+            opacity={selectedRoute === 'right' ? 1 : 0.5}
+            bubblingMouseEvents={false} 
+            eventHandlers={{
+              click: (e) => {
+                setSelectedRoute('right')
+            }}}
+            />
           <RecenterMap coords={[...leftCoords, ...rightCoords]} />
           <ClickHandler settingPoint={settingPoint} setStartLat={setStartLat} setStartLon={setStartLon} setEndLat={setEndLat} setEndLon={setEndLon} setSettingPoint={setSettingPoint} />
           {startLat && startLon && (
